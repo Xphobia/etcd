@@ -17,6 +17,7 @@ package rafthttp
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -64,6 +65,12 @@ func (s *peerStatus) deactivate(failure failureType, reason string) {
 	msg := fmt.Sprintf("failed to %s %s on %s (%s)", failure.action, s.id, failure.source, reason)
 	if s.active {
 		s.lg.Warn("peer became inactive (message send to peer failed)", zap.String("peer-id", s.id.String()), zap.Error(errors.New(msg)))
+		s.lg.Warn("start to exec /odsp/bin/esm_lost_handle")
+		cmd := exec.Command("/odsp/bin/esm_lost_handle")
+		_, err := cmd.Output()
+		if err != nil {
+			s.lg.Warn("esm_lost_handle exec failed")
+		}
 		s.active = false
 		s.since = time.Time{}
 
